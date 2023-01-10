@@ -86,3 +86,11 @@ knitr::opts_chunk$set(fig.align = 'center',
                       message=FALSE) #stop render when error occurs   
 ```
 
+## Project purpose
+
+-   SparCC paper[@friedman2012]
+-   [R package vignette of mina](https://rdrr.io/github/Guan06/mina/man/sparcc.html) to
+    implement SparCC
+-   GitHub repository for [mina
+    workflow](https://github.com/Guan06/mina/)
+- [SpiecEasi package](https://www.rdocumentation.org/packages/SpiecEasi/versions/1.0.7) 
