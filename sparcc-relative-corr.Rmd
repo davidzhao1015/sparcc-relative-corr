@@ -1,0 +1,88 @@
+---
+title: "Relative correlation of microbiome with SparCC"
+author: "David Xin Zhao"
+date: "Last edited `r format(Sys.time(), '%d %B %Y')`"
+knit: (function(inputFile, encoding) {
+      out_dir <- 'docs';
+      rmarkdown::render(inputFile,
+                        encoding=encoding,
+                        output_file=file.path(dirname(inputFile), out_dir, 'index.html'))})
+output:
+  html_document:
+    # theme: cosmo
+    highlight: pygments
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    collapsed: FALSE
+    number_sections: TRUE
+    fig_width: 7
+    fig_height: 6
+    fig_caption: TRUE
+editor_options: 
+  markdown: 
+    wrap: 72
+bibliography: references.bib
+---
+
+<html>
+
+<head>
+
+```{=html}
+<style>
+
+h1{
+ color: #055C9D;
+ font-family: Georgia;
+ font-size: 200%
+}
+
+
+h2{
+ color: #055C9D;
+ font-family: helvetica;
+ font-size: 150%
+}
+
+h3{
+ color: #055C9D;  
+ font-family: helvetica;
+ font-size: 120%; 
+}
+
+p {
+ color: #333333;
+ font-family: helvetica;
+ font-size: 100%;
+}
+
+.blackbox {
+  padding: 1em;
+  background: green;
+  color: black;
+  border: 2px solid orange;
+  border-radius: 10px;
+}
+
+.center {
+  text-align: center;
+}
+
+</style>
+```
+</head>
+
+</html>
+
+```{r setup, include = FALSE}
+# set options for the entire document 
+knitr::opts_chunk$set(fig.align = 'center', 
+                      fig.height=6, fig.width=8,
+                      dev="png",
+                      echo=TRUE, #display code in output document 
+                      error=FALSE,
+                      collapse = FALSE, 
+                      message=FALSE) #stop render when error occurs   
+```
+
