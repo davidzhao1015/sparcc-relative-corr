@@ -86,11 +86,61 @@ knitr::opts_chunk$set(fig.align = 'center',
                       message=FALSE) #stop render when error occurs   
 ```
 
-## Project purpose
+## Problem
+
+Relative abundance data of microbiome is compositional. Classical
+statistical associations methods, such as Pearson correlation or
+Spearman rank correlation, are invalid when analyzing compositional data
+and will lead to spurious correlations.
+
+## Solution
+
+Friedman and Alm (Massachusetts Institute of Technology, MIT) developed
+a statistical method, SparCC to infer valid ecological network
+(associations) between taxa-taxa in microbiome data by effectively
+dealing with compositionality. Experiments using simulated data and the
+Human Microbiome Project data proves validity of SparCC.
+
+Researchers provided both Python- and R- based modules to implement
+SparCC.
+
+## Resources
 
 -   SparCC paper[@friedman2012]
--   [R package vignette of mina](https://rdrr.io/github/Guan06/mina/man/sparcc.html) to
+
+-   [R package vignette of
+    mina](https://rdrr.io/github/Guan06/mina/man/sparcc.html) to
     implement SparCC
+
 -   GitHub repository for [mina
     workflow](https://github.com/Guan06/mina/)
-- [SpiecEasi package](https://www.rdocumentation.org/packages/SpiecEasi/versions/1.0.7) 
+
+-   [SpiecEasi
+    package](https://www.rdocumentation.org/packages/SpiecEasi/versions/1.0.7)
+
+-   [Run R and Python in a single project with reticulated
+    package](https://posit.co/blog/three-ways-to-program-in-python-with-rstudio/#:~:text=Run%20Python%20Scripts%20in%20the%20RStudio%20IDE,-The%20RStudio%20IDE&text=You%20can%20write%20scripts%2C%20import,would%20in%20an%20R%20script.)
+
+-   [Github repository](https://github.com/bio-developer/sparcc) for the
+    SparCC Python module
+
+## Project purpose
+
+1.  Reproduce SparCC analysis of HMP data in the original paper using
+    both Python- and R-based module
+    
+2.  Apply SparCC method to a new, real data, and compare its results to
+    the one based on proportionality analysis
+
+## Scripts
+
+
+
+
+
+
+
+
+
+
+
