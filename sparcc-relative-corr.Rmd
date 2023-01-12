@@ -134,6 +134,15 @@ SparCC.
 
 ## Scripts
 
+### Load OTU table (absolute count)
+
+```{r otu}
+
+
+
+
+
+```
 
 
 
