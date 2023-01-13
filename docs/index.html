@@ -2942,13 +2942,10 @@ SparCC.</p>
 <ul>
 <li><p>SparCC paper<span class="citation">(Friedman and Alm
 2012)</span></p></li>
-<li><p><a href="https://rdrr.io/github/Guan06/mina/man/sparcc.html">R
-package vignette of mina</a> to implement SparCC</p></li>
-<li><p>GitHub repository for <a href="https://github.com/Guan06/mina/">mina workflow</a></p></li>
-<li><p><a href="https://posit.co/blog/three-ways-to-program-in-python-with-rstudio/#:~:text=Run%20Python%20Scripts%20in%20the%20RStudio%20IDE,-The%20RStudio%20IDE&amp;text=You%20can%20write%20scripts%2C%20import,would%20in%20an%20R%20script.">Run
-R and Python in a single project with reticulated package</a></p></li>
 <li><p><a href="https://github.com/davidzhao1015/SparCC3">Github
 repository</a> for the SparCC Python module</p></li>
+<li><p><a href="https://posit.co/blog/three-ways-to-program-in-python-with-rstudio/#:~:text=Run%20Python%20Scripts%20in%20the%20RStudio%20IDE,-The%20RStudio%20IDE&amp;text=You%20can%20write%20scripts%2C%20import,would%20in%20an%20R%20script.">Run
+R and Python in a single project with reticulated package</a></p></li>
 </ul>
 </div>
 <div id="project-purpose" class="section level2" number="0.4">
@@ -3081,21 +3078,19 @@ from SparCC analysis</h3>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># index low abundant taxa</span></span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>low_abund_index <span class="ot">&lt;-</span> <span class="fu">apply</span>(sp_otu2, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="fu">sum</span>(x <span class="sc">&gt;=</span> <span class="dv">10</span>) <span class="sc">&gt;=</span> <span class="dv">5</span>) </span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>full_sparcc2 <span class="ot">&lt;-</span> full_sparcc <span class="sc">%&gt;%</span> </span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;otu_id&quot;</span>)</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>full_sparcc3 <span class="ot">&lt;-</span> full_sparcc2[low_abund_index, low_abund_index] <span class="co"># for generating heat-map </span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co"># two-sided pval of sparcc coefficients </span></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>two.side_pval_sparcc <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">&quot;pvals_spp.two_sided.txt&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() </span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>two.side_pval_sparcc2 <span class="ot">&lt;-</span> two.side_pval_sparcc <span class="sc">%&gt;%</span> </span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;otu_id&quot;</span>)</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>two.side_pval_sparcc3 <span class="ot">&lt;-</span> two.side_pval_sparcc2[low_abund_index, low_abund_index] </span></code></pre></div>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>full_sparcc2 <span class="ot">&lt;-</span> full_sparcc <span class="sc">%&gt;%</span> </span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;otu_id&quot;</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>full_sparcc3 <span class="ot">&lt;-</span> full_sparcc2[low_abund_index, low_abund_index] <span class="co"># for generating heat-map </span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co"># two-sided pval of sparcc coefficients </span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>two.side_pval_sparcc <span class="ot">&lt;-</span> <span class="fu">read.delim</span>(<span class="st">&quot;pvals_spp.two_sided.txt&quot;</span>, <span class="at">header =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() </span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>two.side_pval_sparcc2 <span class="ot">&lt;-</span> two.side_pval_sparcc <span class="sc">%&gt;%</span> </span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="st">&quot;otu_id&quot;</span>)</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>two.side_pval_sparcc3 <span class="ot">&lt;-</span> two.side_pval_sparcc2[low_abund_index, low_abund_index] </span></code></pre></div>
 </div>
 <div id="visualize-sparcc-output" class="section level3" number="3.0.2">
 <h3><span class="header-section-number">3.0.2</span> Visualize SparCC
