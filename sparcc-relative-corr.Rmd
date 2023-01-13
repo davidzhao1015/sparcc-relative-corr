@@ -115,13 +115,10 @@ SparCC.
 -   GitHub repository for [mina
     workflow](https://github.com/Guan06/mina/)
 
--   [SpiecEasi
-    package](https://www.rdocumentation.org/packages/SpiecEasi/versions/1.0.7)
-
 -   [Run R and Python in a single project with reticulated
     package](https://posit.co/blog/three-ways-to-program-in-python-with-rstudio/#:~:text=Run%20Python%20Scripts%20in%20the%20RStudio%20IDE,-The%20RStudio%20IDE&text=You%20can%20write%20scripts%2C%20import,would%20in%20an%20R%20script.)
 
--   [Github repository](https://github.com/bio-developer/sparcc) for the
+-   [Github repository](https://github.com/davidzhao1015/SparCC3) for the
     SparCC Python module
 
 ## Project purpose
@@ -134,15 +131,97 @@ SparCC.
 
 ## Scripts
 
-### Load OTU table (absolute count)
+### Load libraries 
 
-```{r otu}
+```{r library}
 
-
-
-
+library(tidyverse)
+library(reticulate)
 
 ```
+
+### Load OTU table (absolute count)
+
+```{r}
+
+# raw OTU table
+raw_otu <- read.csv(file = "https://knights-lab.github.io/MLRepo/datasets/turnbaugh/refseq/otutable.txt",
+                    header=T,
+                    sep = "")
+
+```
+
+The raw OTU table contains 557 features (OTUs) in 281 samples.
+
+Shorten OTU identifiers with keeping only genus and species names, using
+`stringr` package. And then accumulate counts of OTUs at the species
+level.
+
+```{r shorten OTU names}
+
+head(raw_otu$X.OTU) 
+
+# split strings 
+otu.id <- raw_otu$X.OTU
+
+split_otu.id <- str_split_fixed(otu.id, "_", n=6) %>% 
+        as.data.frame()
+
+# join genus and species fragments 
+join_split_otu.id <- split_otu.id %>% 
+        mutate(taxa = str_c(V3, V4, sep = " ")) 
+
+taxa <- join_split_otu.id$taxa 
+
+# merge taxa to raw otu table 
+raw_otu_taxa <- cbind(raw_otu, taxa) 
+
+# accumulate counts at the species level 
+otu_count_splevel <- raw_otu_taxa %>% 
+        gather(key = "sample", value = "count", -c("ID", "X.OTU", "taxa")) %>% 
+        group_by(sample, taxa) %>%
+        summarise(count_sp = sum(count, na.rm = T)) %>% 
+        arrange(desc(count_sp)) %>%
+        ungroup()
+
+otu_count_splevel2 <- otu_count_splevel %>% 
+        spread(key = "sample", value = count_sp) %>%
+        rownames_to_column("otu_id")
+
+otu_count_splevel3 <- otu_count_splevel2 
+
+otu_count_splevel4 <- otu_count_splevel3 %>%
+  select(-taxa)
+
+
+
+# write out otu data frame in .txt 
+write.table(otu_count_splevel4, 
+            file = "otu_sp.txt",
+            sep = "\t", 
+            dec = ".",
+            row.names = FALSE,
+            na= "NA",
+            quote = FALSE)  
+
+# read in .txt file 
+sp_otu <- read.delim("otu_sp.txt") 
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
