@@ -214,7 +214,6 @@ Fork the SparCC python3 scripts from GitHub repo by a researcher.
 
 Use git bash commend line to run SparCC python2 module following the package manual. The outputs from SparCC analysis were stored in the main directory of the project.  
 
-```{python, include = FALSE}
 
 # install package 
 python ./SparCC3/SparCC.py -h . 
@@ -236,7 +235,6 @@ python ./SparCC3/SparCC.py ./permutation_4.txt -i 5 --cor_file=./perm_cor_spp_4.
 python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp_#.txt 5 -o ./pvals_spp.one_sided.txt -t one_sided
 python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp_#.txt 5 -o ./pvals_spp.two_sided.txt -t two_sided
 
-```
 
 
 ### Tabulate output from SparCC analysis 
