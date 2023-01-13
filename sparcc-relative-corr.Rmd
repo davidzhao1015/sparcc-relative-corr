@@ -108,18 +108,11 @@ SparCC.
 
 -   SparCC paper[@friedman2012]
 
--   [R package vignette of
-    mina](https://rdrr.io/github/Guan06/mina/man/sparcc.html) to
-    implement SparCC
-
--   GitHub repository for [mina
-    workflow](https://github.com/Guan06/mina/)
-
--   [Run R and Python in a single project with reticulated
-    package](https://posit.co/blog/three-ways-to-program-in-python-with-rstudio/#:~:text=Run%20Python%20Scripts%20in%20the%20RStudio%20IDE,-The%20RStudio%20IDE&text=You%20can%20write%20scripts%2C%20import,would%20in%20an%20R%20script.)
-
 -   [Github repository](https://github.com/davidzhao1015/SparCC3) for the
     SparCC Python module
+    
+-   [Run R and Python in a single project with reticulated
+    package](https://posit.co/blog/three-ways-to-program-in-python-with-rstudio/#:~:text=Run%20Python%20Scripts%20in%20the%20RStudio%20IDE,-The%20RStudio%20IDE&text=You%20can%20write%20scripts%2C%20import,would%20in%20an%20R%20script.)
 
 ## Project purpose
 
@@ -236,7 +229,6 @@ python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp_#.txt 5 -o ./p
 python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp_#.txt 5 -o ./pvals_spp.two_sided.txt -t two_sided
 
 
-
 ### Tabulate output from SparCC analysis 
 
 ```{r sparcc output}
@@ -251,12 +243,10 @@ sp_otu2 <- sp_otu %>%
 # index low abundant taxa
 low_abund_index <- apply(sp_otu2, 1, function(x) sum(x >= 10) >= 5) 
 
-
 full_sparcc2 <- full_sparcc %>% 
   column_to_rownames("otu_id")
 
 full_sparcc3 <- full_sparcc2[low_abund_index, low_abund_index] # for generating heat-map 
-
 
 # two-sided pval of sparcc coefficients 
 two.side_pval_sparcc <- read.delim("pvals_spp.two_sided.txt", header = TRUE) %>% 
