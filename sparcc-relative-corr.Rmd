@@ -193,8 +193,6 @@ otu_count_splevel3 <- otu_count_splevel2
 otu_count_splevel4 <- otu_count_splevel3 %>%
   select(-taxa)
 
-
-
 # write out otu data frame in .txt 
 write.table(otu_count_splevel4, 
             file = "otu_sp.txt",
@@ -210,10 +208,98 @@ sp_otu <- read.delim("otu_sp.txt")
 ```
 
 
+### Apply SparCC python3 package to the obese microbiome data 
+
+Fork the SparCC python3 scripts from GitHub repo by a researcher. 
+
+Use git bash commend line to run SparCC python2 module following the package manual. The outputs from SparCC analysis were stored in the main directory of the project.  
+
+```{python, include = FALSE}
+
+# install package 
+python ./SparCC3/SparCC.py -h . 
+
+# correlation calculation 
+python ./SparCC3/SparCC.py otu_sp.txt -i 5 --cor_file=cor_sparcc_spp.out 
+python ./SparCC3/SparCC.py otu_sp.txt -i 5 --cor_file=cor_pearson_spp.out -a pearson 
+python ./SparCC3/SparCC.py otu_sp.txt -i 5 --cor_file=cor_spearman_spp.out -a spearman 
+
+# pseudo p-value calculation 
+python ./SparCC3/MakeBootstraps.py otu_sp.txt -n 5 -t permutation_#.txt -p ./ 
+
+python ./SparCC3/SparCC.py ./permutation_0.txt -i 5 --cor_file=./perm_cor_spp_0.txt
+python ./SparCC3/SparCC.py ./permutation_1.txt -i 5 --cor_file=./perm_cor_spp_1.txt
+python ./SparCC3/SparCC.py ./permutation_2.txt -i 5 --cor_file=./perm_cor_spp_2.txt
+python ./SparCC3/SparCC.py ./permutation_3.txt -i 5 --cor_file=./perm_cor_spp_3.txt
+python ./SparCC3/SparCC.py ./permutation_4.txt -i 5 --cor_file=./perm_cor_spp_4.txt
+
+python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp_#.txt 5 -o ./pvals_spp.one_sided.txt -t one_sided
+python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp_#.txt 5 -o ./pvals_spp.two_sided.txt -t two_sided
+
+```
 
 
+### Tabulate output from SparCC analysis 
+
+```{r sparcc output}
+
+# sparcc coefficients 
+full_sparcc <- read.delim("cor_sparcc_spp.out", header = TRUE) %>% 
+  as.data.frame()  
+
+sp_otu2 <- sp_otu %>% 
+  column_to_rownames("otu_id")
+
+# index low abundant taxa
+low_abund_index <- apply(sp_otu2, 1, function(x) sum(x >= 10) >= 5) 
 
 
+full_sparcc2 <- full_sparcc %>% 
+  column_to_rownames("otu_id")
+
+full_sparcc3 <- full_sparcc2[low_abund_index, low_abund_index] # for generating heat-map 
+
+
+# two-sided pval of sparcc coefficients 
+two.side_pval_sparcc <- read.delim("pvals_spp.two_sided.txt", header = TRUE) %>% 
+  as.data.frame() 
+
+two.side_pval_sparcc2 <- two.side_pval_sparcc %>% 
+  column_to_rownames("otu_id")
+
+two.side_pval_sparcc3 <- two.side_pval_sparcc2[low_abund_index, low_abund_index] 
+
+```
+
+
+### Visualize SparCC output 
+
+```{r corr matrix heatmap, fig.height=6, fig.width=8}
+
+# prepare correlation matrix 
+full_sparcc4 <- full_sparcc3 %>%
+  rownames_to_column("otu_id") %>% 
+  mutate(otu_id = paste("X", otu_id, sep = "")) %>% 
+  column_to_rownames("otu_id") %>%
+  as.matrix()
+
+two.side_pval_sparcc4 <- two.side_pval_sparcc3 %>%
+  rownames_to_column("otu_id") %>% 
+  mutate(otu_id = paste("X", otu_id, sep = "")) %>%
+  column_to_rownames("otu_id") %>%
+  as.matrix()
+
+# heat map based on sparcc coefficients 
+corrplot::corrplot(full_sparcc4, 
+                   method = "color", 
+                   tl.pos = "n", 
+                   type="upper", 
+                   p.mat = two.side_pval_sparcc4,
+                   sig.level = 0.05,
+                   insig = "blank")  # empty cells if pval > 0.05 
+
+
+```
 
 
 
