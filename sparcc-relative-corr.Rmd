@@ -138,7 +138,7 @@ aimed to evaluate the impact of host genotype and adiposity on
 compositions and functions of gut microbiota.
 
 Downloaded the OTU table from the
-[MLRepo](<https://knights-lab.github.io/MLRepo/docs/turnbaugh_lean_obese_all.html>)
+[MLRepo](https://knights-lab.github.io/MLRepo/docs/turnbaugh_lean_obese_all.html)
 website managed by Knights Lab.
 
 ```{r otu table}
@@ -263,7 +263,9 @@ full_sparcc <- read.delim("cor_sparcc_spp.out",
 full_sparcc[1:4,1:5] # inspect coefficients based on SparCC  
 
 ```
-To simplify the heatmap plots, identified and filtered out low-abundant taxa that has less than 10 reads in more than 5 samples. 
+
+To simplify the heatmap plots, identified and filtered out low-abundant
+taxa that has less than 10 reads in more than 5 samples.
 
 ```{r index low abundant taxa}
 
@@ -280,7 +282,8 @@ full_sparcc3 <- full_sparcc2[low_abund_index, low_abund_index] # for generating 
 
 ```
 
-Stored the two-sided p values in the data frame. And then filtered out the low abundant taxa from the full table. 
+Stored the two-sided p values in the data frame. And then filtered out
+the low abundant taxa from the full table.
 
 ```{r sparcc pval}
 
@@ -322,5 +325,20 @@ corrplot::corrplot(full_sparcc4,
                    p.mat = two.side_pval_sparcc4,
                    sig.level = 0.05,
                    insig = "blank")  # empty cells if pval > 0.05 
+
+```
+## Reference
+
+::: {#refs}
+:::
+
+## Package version
+
+The analysis was performed with R version `r getRversion()`. Version
+information of all the R packages are as follow,
+
+```{r package version, echo=FALSE}
+
+sessionInfo()
 
 ```
