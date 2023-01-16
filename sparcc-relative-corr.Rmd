@@ -95,47 +95,53 @@ and will lead to spurious correlations.
 
 ## Solution
 
-Friedman and Alm (Massachusetts Institute of Technology, MIT) developed
-a statistical method, SparCC to infer valid ecological network
-(associations) between taxa-taxa in microbiome data by effectively
-dealing with compositionality. Experiments using simulated data and the
-Human Microbiome Project data proves validity of SparCC.
+Friedman and Alm developed an alternative method[@friedman2012], SparCC
+to infer the correlation network between taxa from microbiome data,
+effectively dealing with compositionality. Experiments based on both
+simulated data and the real data (HMP) proves validity of SparCC.
 
-Researchers provided both Python- and R- based modules to implement
-SparCC.
+In addition, the authors provided Python scripts to implement SparCC
+which is accessible on the [GitHub
+repository](https://github.com/davidzhao1015/SparCC3).
 
-## Resources
+## Purpose of the mini-project
 
--   SparCC paper[@friedman2012]
+1.  Demonstrate application of SparCC on a real microbiome dataset,
+    using Python 3 and R language (run Python and R scripts in a single
+    Markdown with
+    [reticulate](https://posit.co/blog/three-ways-to-program-in-python-with-rstudio/#:~:text=Run%20Python%20Scripts%20in%20the%20RStudio%20IDE,-The%20RStudio%20IDE&text=You%20can%20write%20scripts%2C%20import,would%20in%20an%20R%20script.)
+    R package)
 
--   [Github repository](https://github.com/davidzhao1015/SparCC3) for the
-    SparCC Python module
-    
--   [Run R and Python in a single project with reticulated
-    package](https://posit.co/blog/three-ways-to-program-in-python-with-rstudio/#:~:text=Run%20Python%20Scripts%20in%20the%20RStudio%20IDE,-The%20RStudio%20IDE&text=You%20can%20write%20scripts%2C%20import,would%20in%20an%20R%20script.)
+2.  Visualize SparCC results with the network plot
 
-## Project purpose
+3.  Calculate accuracy of SparCC-based results, using absolute
+    association based on Pearson correlation as reference
 
-1.  Reproduce SparCC analysis of HMP data in the original paper using
-    both Python- and R-based module
-    
-2.  Apply SparCC method to a new, real data, and compare its results to
-    the one based on proportionality analysis
+## Code
 
-## Scripts
+### Load libraries
 
-### Load libraries 
+```{r load library, collapse=TRUE}
 
-```{r library}
-
-library(tidyverse)
-library(reticulate)
+library(tidyverse) # data manipulation
+library(reticulate) # run R and python in a single markdown
 
 ```
 
-### Load OTU table (absolute count)
+### Load 16S-seq OTU table
 
-```{r}
+The OTU table based on 16S gene (V2) sequencing was derived from the
+paper by Turnbaugh et al[@turnbaugh2008]. The microbiome data was
+collected from the US female twin cohorts with a sample size of 154
+individuals in the study. In general, the study by Turnbaugh et al was
+aimed to evaluate the impact of host genotype and adiposity on
+compositions and functions of gut microbiota.
+
+Downloaded the OTU table from the
+[MLRepo](https://knights-lab.github.io/MLRepo/docs/turnbaugh_lean_obese_all.html)
+website managed by Knights Lab.
+
+```{r otu table}
 
 # raw OTU table
 raw_otu <- read.csv(file = "https://knights-lab.github.io/MLRepo/datasets/turnbaugh/refseq/otutable.txt",
@@ -186,6 +192,13 @@ otu_count_splevel3 <- otu_count_splevel2
 otu_count_splevel4 <- otu_count_splevel3 %>%
   select(-taxa)
 
+```
+
+Export the resulting OTU table in the text format for the subsequent
+SparCC analysis.
+
+```{r save otu in text format}
+
 # write out otu data frame in .txt 
 write.table(otu_count_splevel4, 
             file = "otu_sp.txt",
@@ -200,47 +213,66 @@ sp_otu <- read.delim("otu_sp.txt")
 
 ```
 
+### Apply SparCC python3 package to OTU data
 
-### Apply SparCC python3 package to the obese microbiome data 
+Fork the SparCC python3 scripts from GitHub repo by a researcher.
 
-Fork the SparCC python3 scripts from GitHub repo by a researcher. 
+Use git bash commend line to run SparCC python2 module following the
+package manual. The outputs from SparCC analysis were stored in the main
+directory of the project.
 
-Use git bash commend line to run SparCC python2 module following the package manual. The outputs from SparCC analysis were stored in the main directory of the project.  
+#### install package
 
+python ./SparCC3/SparCC.py -h .
 
-# install package 
-python ./SparCC3/SparCC.py -h . 
+#### correlation calculation
 
-# correlation calculation 
-python ./SparCC3/SparCC.py otu_sp.txt -i 5 --cor_file=cor_sparcc_spp.out 
-python ./SparCC3/SparCC.py otu_sp.txt -i 5 --cor_file=cor_pearson_spp.out -a pearson 
-python ./SparCC3/SparCC.py otu_sp.txt -i 5 --cor_file=cor_spearman_spp.out -a spearman 
+python ./SparCC3/SparCC.py otu_sp.txt -i 5 --cor_file=cor_sparcc_spp.out
+python ./SparCC3/SparCC.py otu_sp.txt -i 5
+--cor_file=cor_pearson_spp.out -a pearson python ./SparCC3/SparCC.py
+otu_sp.txt -i 5 --cor_file=cor_spearman_spp.out -a spearman
 
-# pseudo p-value calculation 
-python ./SparCC3/MakeBootstraps.py otu_sp.txt -n 5 -t permutation_#.txt -p ./ 
+#### pseudo p-value calculation
 
-python ./SparCC3/SparCC.py ./permutation_0.txt -i 5 --cor_file=./perm_cor_spp_0.txt
-python ./SparCC3/SparCC.py ./permutation_1.txt -i 5 --cor_file=./perm_cor_spp_1.txt
-python ./SparCC3/SparCC.py ./permutation_2.txt -i 5 --cor_file=./perm_cor_spp_2.txt
-python ./SparCC3/SparCC.py ./permutation_3.txt -i 5 --cor_file=./perm_cor_spp_3.txt
-python ./SparCC3/SparCC.py ./permutation_4.txt -i 5 --cor_file=./perm_cor_spp_4.txt
+python ./SparCC3/MakeBootstraps.py otu_sp.txt -n 5 -t permutation\_#.txt
+-p ./
 
-python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp_#.txt 5 -o ./pvals_spp.one_sided.txt -t one_sided
-python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp_#.txt 5 -o ./pvals_spp.two_sided.txt -t two_sided
+python ./SparCC3/SparCC.py ./permutation_0.txt -i 5
+--cor_file=./perm_cor_spp_0.txt python ./SparCC3/SparCC.py
+./permutation_1.txt -i 5 --cor_file=./perm_cor_spp_1.txt python
+./SparCC3/SparCC.py ./permutation_2.txt -i 5
+--cor_file=./perm_cor_spp_2.txt python ./SparCC3/SparCC.py
+./permutation_3.txt -i 5 --cor_file=./perm_cor_spp_3.txt python
+./SparCC3/SparCC.py ./permutation_4.txt -i 5
+--cor_file=./perm_cor_spp_4.txt
 
+python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp\_#.txt
+5 -o ./pvals_spp.one_sided.txt -t one_sided python
+./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp\_#.txt 5 -o
+./pvals_spp.two_sided.txt -t two_sided
 
-### Tabulate output from SparCC analysis 
+### Tabulate output from SparCC analysis
 
-```{r sparcc output}
+```{r sparcc table}
 
-# sparcc coefficients 
-full_sparcc <- read.delim("cor_sparcc_spp.out", header = TRUE) %>% 
+# store SparCC coefficients in data frame 
+full_sparcc <- read.delim("cor_sparcc_spp.out", 
+                          header = TRUE) %>% 
   as.data.frame()  
 
+full_sparcc[1:4,1:5] # inspect coefficients based on SparCC  
+
+```
+
+To simplify the heatmap plots, identified and filtered out low-abundant
+taxa that has less than 10 reads in more than 5 samples.
+
+```{r index low abundant taxa}
+
+# index low abundant taxa
 sp_otu2 <- sp_otu %>% 
   column_to_rownames("otu_id")
 
-# index low abundant taxa
 low_abund_index <- apply(sp_otu2, 1, function(x) sum(x >= 10) >= 5) 
 
 full_sparcc2 <- full_sparcc %>% 
@@ -248,21 +280,29 @@ full_sparcc2 <- full_sparcc %>%
 
 full_sparcc3 <- full_sparcc2[low_abund_index, low_abund_index] # for generating heat-map 
 
+```
+
+Stored the two-sided p values in the data frame. And then filtered out
+the low abundant taxa from the full table.
+
+```{r sparcc pval}
+
 # two-sided pval of sparcc coefficients 
-two.side_pval_sparcc <- read.delim("pvals_spp.two_sided.txt", header = TRUE) %>% 
+two.side_pval_sparcc <- read.delim("pvals_spp.two_sided.txt", 
+                                   header = TRUE) %>% 
   as.data.frame() 
 
 two.side_pval_sparcc2 <- two.side_pval_sparcc %>% 
   column_to_rownames("otu_id")
 
+# filter low abundant taxa 
 two.side_pval_sparcc3 <- two.side_pval_sparcc2[low_abund_index, low_abund_index] 
 
 ```
 
+### Visualize SparCC results with heatmap plots
 
-### Visualize SparCC output 
-
-```{r corr matrix heatmap, fig.height=6, fig.width=8}
+```{r corr matrix heatmap, fig.height=6, fig.width=8, fig.cap="Significant correlations between abundant species based on SparCC analysis. Blue and red color reprents positive and negative correlation, respectively. Empty blocks reprent p-value greater than 0.05."}
 
 # prepare correlation matrix 
 full_sparcc4 <- full_sparcc3 %>%
@@ -286,23 +326,19 @@ corrplot::corrplot(full_sparcc4,
                    sig.level = 0.05,
                    insig = "blank")  # empty cells if pval > 0.05 
 
+```
+## Reference
+
+::: {#refs}
+:::
+
+## Package version
+
+The analysis was performed with R version `r getRversion()`. Version
+information of all the R packages are as follow,
+
+```{r package version, echo=FALSE}
+
+sessionInfo()
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
