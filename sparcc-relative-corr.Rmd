@@ -299,7 +299,7 @@ two.side_pval_sparcc3 <- two.side_pval_sparcc2[low_abund_index, low_abund_index]
 
 ### Visualize SparCC results with heatmap plots
 
-```{r corr matrix heatmap, fig.height=6, fig.width=8, fig.cap="Significant correlations between abundant species based on SparCC analysis"}
+```{r corr matrix heatmap, fig.height=6, fig.width=8, fig.cap="Significant correlations between abundant species based on SparCC analysis. Blue and red color reprents positive and negative correlation, respectively. Empty blocks reprent p-value greater than 0.05."}
 
 # prepare correlation matrix 
 full_sparcc4 <- full_sparcc3 %>%
