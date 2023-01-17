@@ -125,6 +125,12 @@ repository](https://github.com/davidzhao1015/SparCC3).
 
 library(tidyverse) # data manipulation
 library(reticulate) # run R and python in a single markdown
+library(GGally)  # network visualization 
+library(network)
+library(sna)
+library(ggplot2)
+library(RColorBrewer)
+library(intergraph)
 
 ```
 
@@ -215,11 +221,7 @@ sp_otu <- read.delim("otu_sp.txt")
 
 ### Apply SparCC python3 package to OTU data
 
-Fork the SparCC python3 scripts from GitHub repo by a researcher.
-
-Use git bash commend line to run SparCC python2 module following the
-package manual. The outputs from SparCC analysis were stored in the main
-directory of the project.
+Use git bash commend line to run SparCC python3 module following the package manual. Below was the commend line to implement SparCC analysis on the microbiome data. 
 
 #### install package
 
@@ -327,6 +329,24 @@ corrplot::corrplot(full_sparcc4,
                    insig = "blank")  # empty cells if pval > 0.05 
 
 ```
+
+## Visualize SparCC outcome with network plots 
+
+Applied [ggnet2](https://briatte.github.io/ggnet/) to visualize network based on SparCC correlation inference. 
+
+```{r network}
+
+
+
+
+
+```
+
+
+
+
+
+
 ## Reference
 
 ::: {#refs}
