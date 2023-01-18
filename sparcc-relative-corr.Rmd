@@ -131,6 +131,8 @@ library(sna)
 library(ggplot2)
 library(RColorBrewer)
 library(intergraph)
+library(igraph)
+library(ggraph) 
 
 ```
 
@@ -332,16 +334,56 @@ corrplot::corrplot(full_sparcc4,
 
 ## Visualize SparCC outcome with network plots 
 
-Applied [ggnet2](https://briatte.github.io/ggnet/) to visualize network based on SparCC correlation inference. 
+Applied igraph to visualize network based on SparCC correlation matrix. The [R graph gallery](https://r-graph-gallery.com/250-correlation-network-with-igraph.html) provides detailed R codes to implement igraph package. 
 
-```{r network}
+```{r network, fig.height=6, fig.width=8, fig.cap="Significant correlation network between species based on SparCC analysis"}
+# correlation coefficient matrix (adjacency matrix) for high-abundant taxa
+full_sparcc4_net <- full_sparcc4 
+
+# convert coefficients to 1 or 0 according to conditions 
+cond1 <- two.side_pval_sparcc4 <= 0.05 & full_sparcc4_net >= 0.5
+full_sparcc4_net2 <- full_sparcc4_net
+full_sparcc4_net2[cond1] <- 1 
+
+cond2 <- two.side_pval_sparcc4 > 0.05 | full_sparcc4_net < 0.5
+full_sparcc4_net3 <- full_sparcc4_net2 
+full_sparcc4_net3[cond2] <- 0 
+
+# basic network diagram 
+network_sparcc <- igraph::graph_from_adjacency_matrix(full_sparcc4_net3, 
+                                                      weighted = T, 
+                                                      mode = "upper", 
+                                                      diag=F)
+
+plot(network_sparcc,
+     # === vertex 
+     vertex.color = "blue",
+     vertex.frame.color = "white",
+     vertex.shape = "circle",
+     vertex.size = 5,
+     # === vertex label 
+     vertex.label = NA,
+     # === edge
+     edge.color = "grey80",
+     edge.width = 2)
+
+
+```
+
+### Hierarchical edge bundling 
+
+Refer to the [R graph gallery](https://r-graph-gallery.com/hierarchical-edge-bundling.html) 
+
+```{r hierarchical edge bundling}
+
+
+
 
 
 
 
 
 ```
-
 
 
 
