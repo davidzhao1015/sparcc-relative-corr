@@ -1,0 +1,425 @@
+---
+title: "Relative correlation of microbiome with SparCC"
+author: "Xin David Zhao"
+date: "Last edited `r format(Sys.time(), '%d %B %Y')`"
+knit: (function(inputFile, encoding) {
+      out_dir <- 'docs';
+      rmarkdown::render(inputFile,
+                        encoding=encoding,
+                        output_file=file.path(dirname(inputFile), out_dir, 'index.html'))})
+output:
+  html_document:
+    # theme: cosmo
+    highlight: pygments
+    df_print: paged
+    toc: TRUE
+    toc_float: TRUE
+    collapsed: FALSE
+    number_sections: TRUE
+    fig_width: 7
+    fig_height: 6
+    fig_caption: TRUE
+editor_options: 
+  markdown: 
+    wrap: 72
+bibliography: references.bib
+---
+
+```{r setup, include = FALSE}
+# set options for the entire document 
+knitr::opts_chunk$set(fig.align = 'center', 
+                      fig.height=6, fig.width=8,
+                      dev="png",
+                      echo=TRUE, #display code in output document 
+                      error=FALSE,
+                      collapse = FALSE, 
+                      message=FALSE) #stop render when error occurs   
+```
+
+# Introduction
+
+This project was conducted as part of a research initiative on
+microbiome analysis, addressing challenges related to compositional
+data.
+
+**Problem:** Classical correlation methods like Pearson and Spearman are
+inadequate for analyzing microbiome data due to compositionality,
+leading to spurious correlations.
+
+**Goal:** The aim was to apply SparCC, a specialized tool for microbiome
+compositional data, to infer accurate correlations between taxa and
+provide insightful network visualizations.
+
+# Methodology
+
+-   Data Collection: Microbiome data was sourced from 16S-seq OTU
+    tables, based on a study from Turnbaugh et al. (2008) involving US
+    twin cohorts, with 557 features across 281 samples.
+    
+## Code
+
+### Load libraries
+
+```{r load library, collapse=TRUE, include=FALSE}
+
+library(tidyverse) # data manipulation
+library(reticulate) # run R and python in a single markdown
+library(GGally)  # network visualization 
+library(network)
+library(sna)
+library(ggplot2)
+library(RColorBrewer)
+library(intergraph)
+library(igraph)
+library(ggraph) 
+
+```
+
+    
+### Load 16S-seq OTU table
+
+The OTU table based on 16S gene (V2) sequencing was derived from the
+paper by Turnbaugh et al[@turnbaugh2008]. The microbiome data was
+collected from the US female twin cohorts with a sample size of 154
+individuals in the study. In general, the study by Turnbaugh et al was
+aimed to evaluate the impact of host genotype and adiposity on
+compositions and functions of gut microbiota.
+
+Downloaded the OTU table from the
+[MLRepo](https://knights-lab.github.io/MLRepo/docs/turnbaugh_lean_obese_all.html)
+website managed by Knights Lab.
+
+```{r otu table, include=FALSE}
+
+# raw OTU table
+raw_otu <- read.csv(file = "https://knights-lab.github.io/MLRepo/datasets/turnbaugh/refseq/otutable.txt",
+                    header=T,
+                    sep = "")
+
+```
+
+The raw OTU table contains 557 features (OTUs) in 281 samples.
+
+Shorten OTU identifiers with keeping only genus and species names, using
+`stringr` package. And then accumulate counts of OTUs at the species
+level.
+
+```{r shorten OTU names}
+
+head(raw_otu$X.OTU) 
+
+# split strings 
+otu.id <- raw_otu$X.OTU
+
+split_otu.id <- str_split_fixed(otu.id, "_", n=6) %>% 
+        as.data.frame()
+
+# join genus and species fragments 
+join_split_otu.id <- split_otu.id %>% 
+        mutate(taxa = str_c(V3, V4, sep = " ")) 
+
+taxa <- join_split_otu.id$taxa 
+
+# merge taxa to raw otu table 
+raw_otu_taxa <- cbind(raw_otu, taxa) 
+
+# accumulate counts at the species level 
+otu_count_splevel <- raw_otu_taxa %>% 
+        gather(key = "sample", value = "count", -c("ID", "X.OTU", "taxa")) %>% 
+        group_by(sample, taxa) %>%
+        summarise(count_sp = sum(count, na.rm = T)) %>% 
+        arrange(desc(count_sp)) %>%
+        ungroup()
+
+otu_count_splevel2 <- otu_count_splevel %>% 
+        spread(key = "sample", value = count_sp) %>%
+        rownames_to_column("otu_id")
+
+otu_count_splevel3 <- otu_count_splevel2 
+
+otu_count_splevel4 <- otu_count_splevel3 %>%
+  select(-taxa)
+
+```
+
+Export the resulting OTU table in the text format for the subsequent
+SparCC analysis.
+
+```{r save otu in text format}
+
+# write out otu data frame in .txt 
+write.table(otu_count_splevel4, 
+            file = "otu_sp.txt",
+            sep = "\t", 
+            dec = ".",
+            row.names = FALSE,
+            na= "NA",
+            quote = FALSE)  
+
+# read in .txt file 
+sp_otu <- read.delim("otu_sp.txt") 
+
+```
+
+-   Data Preprocessing: The OTU identifiers were shortened to genus and
+    species, and counts were accumulated at the species level.
+    Low-abundant taxa (less than 10 reads in more than 5 samples) were
+    filtered out.
+
+-   Data Analysis: SparCC was employed for correlation analysis, with
+    alternative assessments using Pearson and Spearman correlations for
+    benchmarking. Pseudo p-values were generated through bootstrapping.
+
+### Apply SparCC python3 package to OTU data
+
+Use git bash commend line to run SparCC python3 module following the
+package manual. Below was the commend line to implement SparCC analysis
+on the microbiome data.
+
+#### install package
+
+python ./SparCC3/SparCC.py -h .
+
+#### correlation calculation
+
+python ./SparCC3/SparCC.py otu_sp.txt -i 5 --cor_file=cor_sparcc_spp.out
+python ./SparCC3/SparCC.py otu_sp.txt -i 5
+--cor_file=cor_pearson_spp.out -a pearson python ./SparCC3/SparCC.py
+otu_sp.txt -i 5 --cor_file=cor_spearman_spp.out -a spearman
+
+#### pseudo p-value calculation
+
+python ./SparCC3/MakeBootstraps.py otu_sp.txt -n 5 -t permutation\_#.txt
+-p ./
+
+python ./SparCC3/SparCC.py ./permutation_0.txt -i 5
+--cor_file=./perm_cor_spp_0.txt python ./SparCC3/SparCC.py
+./permutation_1.txt -i 5 --cor_file=./perm_cor_spp_1.txt python
+./SparCC3/SparCC.py ./permutation_2.txt -i 5
+--cor_file=./perm_cor_spp_2.txt python ./SparCC3/SparCC.py
+./permutation_3.txt -i 5 --cor_file=./perm_cor_spp_3.txt python
+./SparCC3/SparCC.py ./permutation_4.txt -i 5
+--cor_file=./perm_cor_spp_4.txt
+
+python ./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp\_#.txt
+5 -o ./pvals_spp.one_sided.txt -t one_sided python
+./SparCC3/PseudoPvals.py cor_sparcc_spp.out ./perm_cor_spp\_#.txt 5 -o
+./pvals_spp.two_sided.txt -t two_sided
+
+### Tabulate output from SparCC analysis
+
+```{r sparcc table}
+
+# store SparCC coefficients in data frame 
+full_sparcc <- read.delim("cor_sparcc_spp.out", 
+                          header = TRUE) %>% 
+  as.data.frame()  
+
+full_sparcc[1:4,1:5] # inspect coefficients based on SparCC  
+
+```
+
+To simplify the heatmap plots, identified and filtered out low-abundant
+taxa that has less than 10 reads in more than 5 samples.
+
+```{r index low abundant taxa}
+
+# index low abundant taxa
+sp_otu2 <- sp_otu %>% 
+  column_to_rownames("otu_id")
+
+low_abund_index <- apply(sp_otu2, 1, function(x) sum(x >= 10) >= 5) 
+
+full_sparcc2 <- full_sparcc %>% 
+  column_to_rownames("otu_id")
+
+full_sparcc3 <- full_sparcc2[low_abund_index, low_abund_index] # for generating heat-map 
+
+```
+
+Stored the two-sided p values in the data frame. And then filtered out
+the low abundant taxa from the full table.
+
+```{r sparcc pval}
+
+# two-sided pval of sparcc coefficients 
+two.side_pval_sparcc <- read.delim("pvals_spp.two_sided.txt", 
+                                   header = TRUE) %>% 
+  as.data.frame() 
+
+two.side_pval_sparcc2 <- two.side_pval_sparcc %>% 
+  column_to_rownames("otu_id")
+
+# filter low abundant taxa 
+two.side_pval_sparcc3 <- two.side_pval_sparcc2[low_abund_index, low_abund_index] 
+
+```
+
+
+-   Model Development and Evaluation: The SparCC model inferred
+    species-level correlations, and p-values were calculated to assess
+    significance. The results were visualized with network and heatmap
+    plots.
+
+# Results
+
+## Key Findings
+
+Significant correlations were found between various species,
+highlighting intricate relationships in the gut microbiome. These were
+visualized in network plots, where significant positive and negative
+correlations were represented by blue and red edges, respectively.
+
+## Visualizations
+
+Network plots and heatmaps illustrated the correlation structure,
+filtered for significance (p \< 0.05). Hierarchical edge bundling
+provided alternative visual perspectives.
+
+### Visualize SparCC results with heatmap plots
+
+```{r corr matrix heatmap, fig.height=6, fig.width=8, fig.cap="Significant correlations between abundant species based on SparCC analysis. Blue and red color reprents positive and negative correlation, respectively. Empty blocks reprent p-value greater than 0.05."}
+
+# prepare correlation matrix 
+full_sparcc4 <- full_sparcc3 %>%
+  rownames_to_column("otu_id") %>% 
+  mutate(otu_id = paste("X", otu_id, sep = "")) %>% 
+  column_to_rownames("otu_id") %>%
+  as.matrix()
+
+two.side_pval_sparcc4 <- two.side_pval_sparcc3 %>%
+  rownames_to_column("otu_id") %>% 
+  mutate(otu_id = paste("X", otu_id, sep = "")) %>%
+  column_to_rownames("otu_id") %>%
+  as.matrix()
+
+# heat map based on sparcc coefficients 
+corrplot::corrplot(full_sparcc4, 
+                   method = "color", 
+                   tl.pos = "n", 
+                   type="upper", 
+                   p.mat = two.side_pval_sparcc4,
+                   sig.level = 0.05,
+                   insig = "blank")  # empty cells if pval > 0.05 
+
+```
+
+## Visualize SparCC outcome with network plots
+
+Applied igraph to visualize network based on SparCC correlation matrix.
+The [R graph
+gallery](https://r-graph-gallery.com/250-correlation-network-with-igraph.html)
+provides detailed R codes and introduction.
+
+```{r network, fig.height=6, fig.width=8, fig.cap="Significant correlation network between species based on SparCC analysis"}
+# correlation coefficient matrix (adjacency matrix) for high-abundant taxa
+full_sparcc4_net <- full_sparcc4 
+
+# convert coefficients to 1 or 0 according to conditions 
+cond1 <- two.side_pval_sparcc4 <= 0.05 & full_sparcc4_net >= 0.5
+full_sparcc4_net2 <- full_sparcc4_net
+full_sparcc4_net2[cond1] <- 1 
+
+cond2 <- two.side_pval_sparcc4 > 0.05 | full_sparcc4_net < 0.5
+full_sparcc4_net3 <- full_sparcc4_net2 
+full_sparcc4_net3[cond2] <- 0 
+
+# basic network diagram 
+network_sparcc <- igraph::graph_from_adjacency_matrix(full_sparcc4_net3, 
+                                                      weighted = T, 
+                                                      mode = "upper", 
+                                                      diag=F)
+
+plot(network_sparcc,
+     # === vertex 
+     vertex.color = "blue",
+     vertex.frame.color = "white",
+     vertex.shape = "circle",
+     vertex.size = 5,
+     # === vertex label 
+     vertex.label = NA,
+     # === edge
+     edge.color = "grey80",
+     edge.width = 2)
+
+```
+
+### Hierarchical edge bundling
+
+Alternatively, use hierarchical edge bundling to illustrate correlation
+network based on SparCC matrix. The R graph gallery provides
+[introduction](https://r-graph-gallery.com/309-intro-to-hierarchical-edge-bundling.html)
+and
+[advanced](https://r-graph-gallery.com/310-custom-hierarchical-edge-bundling.html)
+R implementation with `ggraph` package.
+
+Prepare input tables for drawing the hierarchical edge bundling with
+`igraph` package.
+
+```{r input-hierarchical-edge-bundling}
+
+# hierarchical table 
+taxa_id <- full_sparcc4_net3 %>% 
+  as.data.frame() %>% 
+  rownames_to_column("taxa") %>% 
+  pull(taxa)  # extract 153 species 
+
+hierarchy_df <- data.frame(from = rep("origin", 153),  # pseudo origin 
+                           to = taxa_id) 
+
+# vertex table 
+vertex_df <- data.frame(name = c(taxa_id, unique(hierarchy_df$from)))   
+
+# connect table 
+connect_df <- full_sparcc4_net3 %>% 
+  as.data.frame() %>% 
+  rownames_to_column("taxa") %>% 
+  gather(key = "to", value = "sparcc", -taxa) %>% 
+  mutate(taxa_is.num = as.numeric(str_sub(taxa, -1)),
+         to_is.num = as.numeric(str_sub(to, -1))) %>% 
+  mutate(keep_upper = to_is.num > taxa_is.num) %>% 
+  filter(keep_upper == TRUE & sparcc != 0) %>% # upper matrix & coefficient greater than 0.5 and pval < 0.05 
+  select(from = taxa, to)
+
+# create a graph object 
+sparcc_hierarchy_plot <- graph_from_data_frame(hierarchy_df, vertices = vertex_df)   
+
+# the connection object must refer to the ids of the leaves 
+from <- match(connect_df$from, vertex_df$name) 
+to <- match(connect_df$to, vertex_df$name) 
+
+```
+
+Draw the hierarchy edge bundling plot with `ggraph` package.
+
+```{r hierarchical-edge-bundling}
+# basic graph
+ggraph(sparcc_hierarchy_plot, layout = "dendrogram", circular = TRUE) +
+  geom_conn_bundle(data = get_con(from = from, to = to), alpha=0.2, colour = "purple", tension = .5) +
+  geom_node_point(aes(filter = leaf, x= x*1.05, y=y*1.05)) + 
+  theme_void()
+
+```
+
+## Impact
+
+The application of SparCC successfully mitigated the risk of spurious
+correlations, providing a more accurate representation of the microbial
+community's structure.
+
+
+## Reference
+
+::: {#refs}
+:::
+
+## Package version
+
+The analysis was performed with R version `r getRversion()`. Version
+information of all the R packages are as follow,
+
+```{r package version, echo=FALSE}
+
+sessionInfo()
+
+```
